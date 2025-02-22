@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@langchain/community": "^0.3.32",
+    "@langchain/core": "^0.3.40",
+    "@mendable/firecrawl-js": "^0.0.36",
     "@qdrant/js-client-rest": "^1.13.0",
     "axios": "^1.7.9",
     "firecrawl": "^1.18.2",

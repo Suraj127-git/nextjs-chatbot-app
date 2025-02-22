@@ -11,14 +11,28 @@ interface ScrapeResult {
 
 const KnowledgeBase: React.FC = () => {
   const [url, setUrl] = useState<string>('');
-  const [scrapeResult, setScrapeResult] = useState<ScrapeResult | null>(null);
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const resultRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (loading) {
+      gsap.to(loaderRef.current, {
+        rotate: 360,
+        duration: 1,
+        repeat: -1,
+        ease: "none"
+      });
+    } else {
+      gsap.killTweensOf(loaderRef.current);
+    }
+  }, [loading]);
 
   const handleScrape = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setIsSuccess(false);
     
     // Animate form on submit
     gsap.to(formRef.current, {
@@ -29,25 +43,14 @@ const KnowledgeBase: React.FC = () => {
     });
 
     try {
-      const response = await axios.post('/api/scrape', { url });
-      setScrapeResult(response.data.result);
+      await axios.post('/api/scrape/scrape', { url });
+      setIsSuccess(true);
     } catch (error) {
       console.error('Error scraping URL:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (scrapeResult && resultRef.current) {
-      gsap.from(resultRef.current, { 
-        opacity: 0, 
-        duration: 1, 
-        y: 20,
-        ease: "power2.out"
-      });
-    }
-  }, [scrapeResult]);
 
   return (
     <motion.div 
@@ -80,34 +83,31 @@ const KnowledgeBase: React.FC = () => {
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors relative"
         >
           {loading ? (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              Scraping...
-            </motion.span>
+            <div className="flex items-center justify-center">
+              <div 
+                ref={loaderRef}
+                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
+              />
+              <span>Scraping...</span>
+            </div>
           ) : (
             'Scrape'
           )}
         </motion.button>
       </form>
       <AnimatePresence>
-        {scrapeResult && (
+        {isSuccess && (
           <motion.div
-            ref={resultRef}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.5 }}
-            className="mt-6 p-4 bg-gray-100 rounded overflow-hidden"
+            className="mt-6 p-4 bg-green-100 rounded overflow-hidden"
           >
-            <h3 className="text-xl font-semibold mb-2">Scraped Data:</h3>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{scrapeResult.content}</p>
-            <p className="text-xs text-gray-500 mt-2">Source: {scrapeResult.url}</p>
+            <p className="text-green-700">Successfully scraped the URL: {url}</p>
           </motion.div>
         )}
       </AnimatePresence>

@@ -23,7 +23,7 @@ type OllamaGenerationResponse = {
 export async function getEmbedding(text: string): Promise<number[]> {
   try {
     const response = await axios.post<OllamaEmbeddingResponse>(
-      `${OLLAMA_API_URL}/embeddings`,
+      `${OLLAMA_API_URL}/api/embeddings`,
       {
         model: OLLAMA_EMBEDDING_MODEL,
         prompt: text,
@@ -48,13 +48,15 @@ export async function getEmbedding(text: string): Promise<number[]> {
  */
 export async function getAnswer(
   question: string,
-  context: string
+  context?: string
 ): Promise<string> {
-  const prompt = `[INST] Using this context: ${context}\n\nAnswer this question: ${question}[/INST]`;
+  const prompt = context 
+    ? `[INST] Using this context: ${context}\n\nAnswer this question: ${question}[/INST]`
+    : `[INST] ${question}[/INST]`;
 
   try {
     const response = await axios.post<OllamaGenerationResponse>(
-      `${OLLAMA_API_URL}/generate`,
+      `${OLLAMA_API_URL}/api/generate`,
       {
         model: OLLAMA_MODEL,
         prompt,

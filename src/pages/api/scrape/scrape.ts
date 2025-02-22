@@ -1,6 +1,6 @@
 // /src/pages/api/scrape.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { scrapeAndIndex } from '../../services/scraperService';
+import { scrapeAndIndex } from '../../../services/scraperService';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
