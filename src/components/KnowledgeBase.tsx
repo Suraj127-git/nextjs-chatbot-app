@@ -11,30 +11,29 @@ interface ScrapeResult {
 
 const KnowledgeBase: React.FC = () => {
   const [url, setUrl] = useState<string>('');
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [scrapeResult, setScrapeResult] = useState<ScrapeResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
-  const loaderRef = useRef<HTMLDivElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (loading) {
-      gsap.to(loaderRef.current, {
-        rotate: 360,
-        duration: 1,
-        repeat: -1,
-        ease: "none"
+    if (scrapeResult && resultRef.current) {
+      gsap.from(resultRef.current, { 
+        opacity: 0, 
+        duration: 1, 
+        y: 20,
+        ease: "power2.out"
       });
-    } else {
-      gsap.killTweensOf(loaderRef.current);
     }
-  }, [loading]);
+  }, [scrapeResult]);
 
   const handleScrape = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setIsSuccess(false);
+    setError(null);
+    setScrapeResult(null);
     
-    // Animate form on submit
     gsap.to(formRef.current, {
       scale: 0.98,
       duration: 0.1,
@@ -43,10 +42,11 @@ const KnowledgeBase: React.FC = () => {
     });
 
     try {
-      await axios.post('/api/scrape/scrape', { url });
-      setIsSuccess(true);
-    } catch (error) {
+      const response = await axios.post('/api/scrape/scrape', { url });
+      setScrapeResult(response.data.result);
+    } catch (error: any) {
       console.error('Error scraping URL:', error);
+      setError(error.response?.data?.error || 'Failed to scrape the URL');
     } finally {
       setLoading(false);
     }
@@ -77,37 +77,53 @@ const KnowledgeBase: React.FC = () => {
           placeholder="Enter website URL to scrape"
           className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
+          disabled={loading}
         />
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors relative"
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors disabled:bg-gray-400"
         >
           {loading ? (
-            <div className="flex items-center justify-center">
-              <div 
-                ref={loaderRef}
-                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
-              />
-              <span>Scraping...</span>
-            </div>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              Scraping...
+            </motion.span>
           ) : (
             'Scrape'
           )}
         </motion.button>
       </form>
+      
       <AnimatePresence>
-        {isSuccess && (
+        {error && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mt-6 p-4 bg-green-100 rounded overflow-hidden"
+            className="mt-4 p-3 bg-red-100 text-red-700 rounded"
           >
-            <p className="text-green-700">Successfully scraped the URL: {url}</p>
+            {error}
+          </motion.div>
+        )}
+        
+        {scrapeResult && (
+          <motion.div
+            ref={resultRef}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mt-6 p-4 bg-gray-100 rounded overflow-hidden"
+          >
+            <h3 className="text-xl font-semibold mb-2">Scraped Data:</h3>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{scrapeResult.content}</p>
+            <p className="text-xs text-gray-500 mt-2">Source: {scrapeResult.url}</p>
           </motion.div>
         )}
       </AnimatePresence>

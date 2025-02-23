@@ -51,8 +51,12 @@ export async function getAnswer(
   context?: string
 ): Promise<string> {
   const prompt = context 
-    ? `[INST] Using this context: ${context}\n\nAnswer this question: ${question}[/INST]`
-    : `[INST] ${question}[/INST]`;
+    ? `[INST]You are a helpful AI assistant. Using the following context, answer the question. If the context doesn't help, say so.
+
+Context: ${context}
+
+Question: ${question}[/INST]`
+    : `[INST]You are a helpful AI assistant. Please answer this question: ${question}[/INST]`;
 
   try {
     const response = await axios.post<OllamaGenerationResponse>(

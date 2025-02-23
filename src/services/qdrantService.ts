@@ -42,7 +42,7 @@ export async function insertUserQA(question: string, answer: string, embedding: 
   }
 }
 
-export async function searchKnowledgeBase(queryEmbedding: number[], top: number = 5) {
+export async function searchKnowledgeBase(queryEmbedding: number[], question: string, top: number = 5) {
   try {
     // Check if collection exists
     const collections = await client.getCollections();
@@ -54,11 +54,35 @@ export async function searchKnowledgeBase(queryEmbedding: number[], top: number 
       return [];
     }
 
+    // Extract key terms from the question
+    const keywords = question.toLowerCase().split(' ').filter(word => word.length > 2);
+
+    // Search with payload filtering using question keywords
     const result = await client.search(KNOWLEDGE_BASE_COLLECTION, {
       vector: queryEmbedding,
       limit: top,
       with_payload: true,
+      filter: {
+        should: [
+          {
+            key: "content",
+            match: {
+              text: keywords.join(' ')
+            }
+          },
+          {
+            key: "url",
+            match: {
+              text: keywords[0] // Use first keyword for URL matching
+            }
+          }
+        ]
+      },
+      score_threshold: 0.3
     });
+
+    console.log('Search keywords:', keywords);
+    console.log('Search results:', JSON.stringify(result, null, 2));
 
     return result || [];
   } catch (error) {

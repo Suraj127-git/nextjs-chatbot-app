@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Search for relevant context using the embedding
     console.log('Searching knowledge base');
-    const kbResults = await searchKnowledgeBase(queryEmbedding);
+    const kbResults = await searchKnowledgeBase(queryEmbedding, question);
     console.log('Knowledge base search completed', JSON.stringify(kbResults));
 
     let answer;

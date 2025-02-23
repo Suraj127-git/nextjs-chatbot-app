@@ -2,6 +2,19 @@ import FirecrawlApp from '@mendable/firecrawl-js';
 import { getEmbedding } from './llmService';
 import { insertKnowledgeData } from './qdrantService';
 
+interface ScrapeResponse {
+  success: boolean;
+  error?: string;
+  markdown?: string;
+  html?: string;
+  data?: {
+    content: string;
+    metadata?: any;
+    html?: string;
+  };
+}
+
+
 export async function scrapeAndIndex(url: string) {
   try {
     console.log('Step 1: Validating API key configuration');
@@ -15,28 +28,43 @@ export async function scrapeAndIndex(url: string) {
     });
     
     console.log('Step 3: Starting web scraping process for URL:', url);
-    const scrapeResponse = await firecrawl.scrapeUrl(url, {
-      formats: ['markdown', 'html'],
-      timeout: 30000  // Increased timeout for complex pages
+    const scrapeResponse: ScrapeResponse = await firecrawl.scrapeUrl(url, {
+      formats: ['markdown','html'],
+      timeout: 60000,
+      waitFor: 0,
     });
 
-    console.log('Step 4: Validating scrape response');
+    console.log('Step 4: Validating scrape response', JSON.stringify(scrapeResponse));
     if (!scrapeResponse.success) {
       throw new Error(`Scraping failed: ${scrapeResponse.error}`);
     }
 
     console.log('Step 5: Processing scraped content');
-    const content = scrapeResponse.data?.content;
+    // Try to extract content from different sources
+    const rawContent = scrapeResponse.markdown || scrapeResponse.html || scrapeResponse.data?.content || scrapeResponse.data?.html || '';
+
     
-    if (!content || typeof content !== 'string' || content.trim().length === 0) {
-      throw new Error('Scraped content is empty or invalid');
+    if (!rawContent) {
+      throw new Error('No content received from scraper');
     }
 
-    // Clean up content before processing
-    const cleanedContent = content
-      .replace(/\[.*?\]\(.*?\)/g, '') // Remove markdown links
-      .replace(/<[^>]+>/g, '')        // Remove HTML tags
-      .substring(0, 10000);           // Truncate to first 10k characters
+    // Enhanced content cleaning
+    const cleanedContent = rawContent
+      .replace(/<head>[\s\S]*?<\/head>/gi, '') // Remove head section
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .replace(/&[a-z]+;/gi, ' ') // Remove HTML entities
+      .trim()
+      .substring(0, 10000);
+
+    if (cleanedContent.length < 50) { // Minimum content length check
+      throw new Error('Insufficient content after cleaning');
+    }
+
+    console.log('Cleaned content length:', cleanedContent.length);
+    console.log('Sample content:', cleanedContent.substring(0, 200));
 
     console.log('Step 6: Generating embedding for scraped content');
     const embedding = await getEmbedding(cleanedContent);
@@ -52,7 +80,11 @@ export async function scrapeAndIndex(url: string) {
     return { 
       url, 
       content: cleanedContent,
-      metadata: scrapeResponse.data?.metadata 
+      metadata: {
+        originalLength: rawContent.length,
+        cleanedLength: cleanedContent.length,
+        timestamp: new Date().toISOString()
+      }
     };
   } catch (error) {
     console.error('Scraping operation failed:', error);

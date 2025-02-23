@@ -11,27 +11,26 @@
   "dependencies": {
     "@langchain/community": "^0.3.32",
     "@langchain/core": "^0.3.40",
-    "@mendable/firecrawl-js": "^0.0.36",
+    "@mendable/firecrawl-js": "^1.18.2",
     "@qdrant/js-client-rest": "^1.13.0",
     "axios": "^1.7.9",
-    "firecrawl": "^1.18.2",
     "framer-motion": "^12.4.7",
     "gsap": "^3.12.7",
     "langchain": "^0.3.19",
-    "next": "15.1.7",
+    "next": "^15.1.7",
     "ollama": "^0.5.13",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.1.7",
-    "postcss": "^8",
+    "@eslint/eslintrc": "^3.0.2",
+    "@types/node": "^20.12.2",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "eslint": "^9.3.0",
+    "eslint-config-next": "^15.1.7",
+    "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5.4.5"
   }
 }
