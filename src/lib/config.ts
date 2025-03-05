@@ -7,3 +7,4 @@ export const KNOWLEDGE_BASE_COLLECTION = 'knowledge_base';
 export const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'http://localhost:11434';
 export const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama2';
 export const OLLAMA_EMBEDDING_MODEL = process.env.OLLAMA_EMBEDDING_MODEL || 'mistral';
+export const OLlAMA_API_KEY = process.env.OLlAMA_API_KEY || '';

@@ -1,9 +1,9 @@
-// src/services/llmService.ts
 import axios from 'axios';
 import {
   OLLAMA_API_URL,
   OLLAMA_MODEL,
   OLLAMA_EMBEDDING_MODEL,
+  OLlAMA_API_KEY,
 } from '../lib/config';
 
 // Response type definitions
@@ -13,6 +13,10 @@ type OllamaEmbeddingResponse = {
 
 type OllamaGenerationResponse = {
   response: string;
+};
+
+const headers = {
+  Authorization: `Bearer ${OLlAMA_API_KEY}`,
 };
 
 /**
@@ -30,7 +34,8 @@ export async function getEmbedding(text: string): Promise<number[]> {
         options: {
           embedding_only: true,
         },
-      }
+      },
+      { headers }
     );
 
     return response.data.embedding;
@@ -72,7 +77,8 @@ Question: ${question}[/INST]`
           num_predict: 256,
           stop: ['</s>', '[INST]'],
         },
-      }
+      },
+      { headers }
     );
 
     return response.data.response.trim();
